@@ -10,6 +10,7 @@ const ZONA = z.enum([
   'Brujas',
   'Los Pinos',
   'Alarcón',
+  'Nuevo Mazatlán',
 ]);
 
 const propiedades = defineCollection({
