@@ -22,3 +22,7 @@ dist/
 Thumbs.db
 
 .vercel
+
+# Claude Code metadata local
+.agents/
+skills-lock.json
