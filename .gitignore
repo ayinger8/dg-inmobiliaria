@@ -21,10 +21,7 @@ dist/
 .DS_Store
 Thumbs.db
 
-.vercel
-
-# Claude Code metadata local
+# Claude Code metadata local (NO commitear)
 .agents/
 skills-lock.json
-
-.vercel
+.claude/settings.local.json

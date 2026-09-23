@@ -1,5 +1,5 @@
 ---
-titulo: Preventa de departamentos en Fraccionamiento Alarcón
+titulo: Isla Venados Residencial — Preventa en Alarcón
 tipo: departamento
 estadoVenta: disponible
 estadoPublicacion: preventa
@@ -8,7 +8,8 @@ precio: 1247810
 precioDesde: true
 moneda: MXN
 destacada: true
-direccionAprox: Fraccionamiento Alarcón, Mazatlán, Sinaloa
+direccionAprox: Colonia Alarcón, Mazatlán, Sinaloa
+metrosConstruccion: 63
 caracteristicas:
   - 2 recámaras
   - 1 baño completo
@@ -17,36 +18,42 @@ caracteristicas:
   - Cocina
   - Terraza
   - Cuarto de lavado
+  - 1 cajón de estacionamiento
   - Acabados modernos
 aceptaCreditos:
   - INFONAVIT
   - FOVISSSTE
   - Crédito hipotecario bancario
   - Contado
-numImagenes: 7
+numImagenes: 6
 ---
 
-Departamentos en preventa dentro del **Fraccionamiento Alarcón** en Mazatlán,
-diseñados con una distribución funcional y acabados modernos que aprovechan
-al máximo cada espacio.
+**Isla Venados Residencial** llega a la Colonia Alarcón con una propuesta
+de departamentos contemporáneos pensados para primeras compras y para
+quienes buscan estrenar en una zona bien conectada de Mazatlán. Fachadas
+con vegetación colgante, planta baja con locales comerciales y un
+diseño interior que aprovecha cada metro.
 
 ## Distribución interior
 
-- Sala
-- Comedor
-- Cocina
+- Sala y comedor integrados
+- Cocina con acabados modernos
 - 2 recámaras
 - 1 baño completo
-- Terraza
+- Terraza con vista al frente
 - Cuarto de lavado independiente
+- 1 cajón de estacionamiento
+
+**Superficie total: 62.63 m²** (54.98 m² interiores + 7.65 m² exteriores).
 
 ## Ubicación privilegiada
 
-Ubicados a pocos minutos de zonas comerciales, avenidas principales y
-servicios de la ciudad, permitiendo movilidad rápida hacia el resto de
-Mazatlán y la Zona Dorada.
+La Colonia Alarcón está a pocos minutos de zonas comerciales, avenidas
+principales y servicios, con conexión rápida al resto de Mazatlán. La
+propia planta baja del edificio integra locales comerciales, lo que da
+acceso inmediato a servicios de uso cotidiano.
 
-## Opciones de pago
+## Opciones de compra
 
 - **INFONAVIT**
 - **FOVISSSTE**
@@ -55,5 +62,5 @@ Mazatlán y la Zona Dorada.
 
 Precio desde **$1,247,810 MXN**.
 
-_Agenda tu visita y aparta tu departamento; los precios de preventa son por
-tiempo limitado._
+_Cupos limitados a la fase de preventa. Agenda tu visita para conocer
+los modelos disponibles y las condiciones actuales de apartado._
