@@ -13,21 +13,52 @@ const WHATSAPP_URL = 'https://wa.me/526699334134?text=Hola%2C%20quiero%20encontr
         <span>Escríbenos por WhatsApp<strong>669 933 41 34</strong></span>
       </a>
     </div>
-    <form class="lead-form" action="#" method="post">
-      <label><span>Nombre completo</span><input name="nombre" type="text" placeholder="Nombre completo" autocomplete="name" /></label>
-      <label><span>Teléfono / WhatsApp</span><input name="telefono" type="tel" placeholder="Teléfono / WhatsApp" autocomplete="tel" /></label>
-      <label><span>Correo electrónico</span><input name="correo" type="email" placeholder="Correo electrónico" autocomplete="email" /></label>
+    <form class="lead-form" id="home-contact-form" novalidate>
+      <label><span>Nombre completo</span><input name="nombre" type="text" placeholder="Nombre completo" autocomplete="name" required aria-label="Nombre completo" /></label>
+      <label><span>Teléfono / WhatsApp</span><input name="telefono" type="tel" placeholder="Teléfono / WhatsApp" autocomplete="tel" aria-label="Teléfono o WhatsApp" /></label>
+      <label><span>Correo electrónico</span><input name="correo" type="email" placeholder="Correo electrónico" autocomplete="email" aria-label="Correo electrónico" /></label>
       <label><span>¿Qué estás buscando?</span>
-        <select name="tipo">
+        <select name="tipo" aria-label="Qué tipo de vivienda buscas">
           <option value="">¿Qué estás buscando?</option>
           <option>Casa</option>
           <option>Departamento</option>
+          <option>Terreno</option>
+          <option>Desarrollo en preventa</option>
           <option>Aún no estoy seguro</option>
         </select>
       </label>
-      <label class="lead-form__wide"><span>Mensaje</span><textarea name="mensaje" placeholder="Cuéntanos más sobre lo que buscas..."></textarea></label>
-      <button class="button button--gold lead-form__wide" type="button">Enviar mensaje <ArrowRight size={17} stroke-width={1.5} /></button>
-      <small class="lead-form__note">Formulario visual. La integración de envío se conectará posteriormente.</small>
+      <label class="lead-form__wide"><span>Mensaje</span><textarea name="mensaje" placeholder="Cuéntanos más sobre lo que buscas..." aria-label="Mensaje"></textarea></label>
+      <button class="button button--gold lead-form__wide" type="submit">Enviar por WhatsApp <ArrowRight size={17} stroke-width={1.5} /></button>
     </form>
   </div>
 </section>
+
+<script>
+  document.getElementById('home-contact-form')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const fd = new FormData(form);
+    const nombre   = String(fd.get('nombre')   || '').trim();
+    const telefono = String(fd.get('telefono') || '').trim();
+    const correo   = String(fd.get('correo')   || '').trim();
+    const tipo     = String(fd.get('tipo')     || '').trim();
+    const mensaje  = String(fd.get('mensaje')  || '').trim();
+
+    if (!nombre) {
+      form.querySelector<HTMLInputElement>('input[name="nombre"]')?.focus();
+      return;
+    }
+
+    const parts = [
+      `Hola, soy ${nombre}`,
+      telefono && `mi teléfono es ${telefono}`,
+      correo   && `mi correo es ${correo}`,
+      tipo     && `Busco: ${tipo}`,
+      mensaje  && `Mensaje: ${mensaje}`,
+    ].filter(Boolean);
+
+    const text = parts.join('. ') + '.';
+    window.open(`https://wa.me/526699334134?text=${encodeURIComponent(text)}`, '_blank');
+    form.reset();
+  });
+</script>
