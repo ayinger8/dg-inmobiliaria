@@ -8,13 +8,52 @@ import FiltrosBarra from '../components/propiedades/FiltrosBarra.astro';
 import PropiedadesTabs from '../components/propiedades/PropiedadesTabs.astro';
 import PropiedadesGrid from '../components/propiedades/PropiedadesGrid.astro';
 import PropiedadesCTA from '../components/propiedades/PropiedadesCTA.astro';
-import { getPropiedades } from '../lib/supabase';
+import { getCollection } from 'astro:content';
+import type { ImageMetadata } from 'astro';
 
-let initialProps: any[] = [];
-try {
-  initialProps = await getPropiedades();
-} catch (e) {
-  console.error('[propiedades] Error al cargar desde Supabase:', e);
+// ── Mapeo de la Content Collection al shape que consume el script cliente ──
+// Se conservan los nombres snake_case que espera el JS de filtros/render,
+// para no tocar la lógica ni el CSS.
+const entries = await getCollection('propiedades');
+
+const initialProps = entries
+  .map(({ slug, data: d }) => ({
+    slug,
+    titulo: d.titulo,
+    tipo: d.tipo,
+    estado_venta: d.estadoVenta,
+    estado_publicacion: d.estadoPublicacion ?? 'disponible',
+    zona: d.zona,
+    precio: d.precio,
+    moneda: d.moneda,
+    metros_construccion: d.metrosConstruccion ?? null,
+    metros_terreno: d.metrosTerreno ?? null,
+    caracteristicas: d.caracteristicas ?? [],
+    acepta_creditos: d.aceptaCreditos ?? [],
+    destacada: d.destacada ?? false,
+    portada: null as string | null,   // se resuelve en el bloque de imágenes de abajo
+    imagenes: [] as string[],
+  }))
+  // Destacadas primero, luego por título alfabéticamente
+  .sort((a, b) => {
+    if (a.destacada !== b.destacada) return a.destacada ? -1 : 1;
+    return a.titulo.localeCompare(b.titulo, 'es');
+  });
+
+// ── Resolver URLs de imágenes vía import.meta.glob (build-time) ──
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/propiedades/**/*.{jpg,jpeg,png,webp}',
+  { eager: true }
+);
+
+for (const p of initialProps) {
+  const prefix = `/src/assets/propiedades/${p.slug}/`;
+  const files = Object.entries(imageModules)
+    .filter(([path]) => path.startsWith(prefix))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, mod]) => mod.default.src);
+  p.imagenes = files;
+  p.portada = files[0] ?? null;
 }
 ---
 

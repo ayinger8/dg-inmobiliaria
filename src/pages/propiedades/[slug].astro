@@ -3,7 +3,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Header from '../../components/Header.astro';
 import Footer from '../../components/Footer.astro';
 import WhatsAppButton from '../../components/WhatsAppButton.astro';
-import { supabase, getPropiedadBySlug, type Propiedad } from '../../lib/supabase';
+import { getCollection, getEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
 import {
   MapPin, BedDouble, Bath, Car, Waves, Leaf, Wind,
   UtensilsCrossed, ArrowUp, Shield, Laptop, Package,
@@ -13,57 +14,46 @@ import {
   Maximize2, X,
 } from 'lucide-astro';
 
-// ── Dynamic SSR fetch ─────────────────────────────────────────
-const { slug } = Astro.params;
-
-let prop: Propiedad;
-try {
-  prop = await getPropiedadBySlug(slug!);
-} catch {
-  return Astro.redirect('/propiedades', 302);
+// ── Static paths ─────────────────────────────────────────────
+export async function getStaticPaths() {
+  const entries = await getCollection('propiedades');
+  return entries.map((entry) => ({ params: { slug: entry.slug } }));
 }
 
-// ── Related properties ────────────────────────────────────────
-const { data: relPool } = await supabase
-  .from('propiedades')
-  .select('id, slug, titulo, tipo, zona, precio, moneda, metros_construccion, metros_terreno, imagenes, portada, estado_venta, estado_publicacion, caracteristicas, destacada')
-  .eq('activa', true)
-  .neq('id', prop.id)
-  .limit(8);
+const { slug } = Astro.params;
+const entry = await getEntry('propiedades', slug!);
+// getStaticPaths garantiza que sólo se generan rutas con entry válido en output:'static',
+// así que este throw es defensivo: si alguna vez pasa, es un bug del build.
+if (!entry) throw new Error(`Entry no encontrado para slug: ${slug}`);
 
-const pool = (relPool || []) as Propiedad[];
-const related = [
-  ...pool.filter((p) => p.tipo === prop.tipo),
-  ...pool.filter((p) => p.tipo !== prop.tipo),
+const prop = entry.data;
+const { Content } = await entry.render();
+
+// ── Related (mismo tipo primero, hasta 3) ────────────────────
+const allEntries = await getCollection('propiedades');
+const pool = allEntries.filter((e) => e.slug !== slug);
+const relatedEntries = [
+  ...pool.filter((e) => e.data.tipo === prop.tipo),
+  ...pool.filter((e) => e.data.tipo !== prop.tipo),
 ].slice(0, 3);
 
-// ── Image data ────────────────────────────────────────────────
+// ── Imágenes (build-time glob desde src/assets) ──────────────
 const FALLBACK = '/assets/mazatlan-hero.webp';
-let images: string[] = [];
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/propiedades/**/*.{jpg,jpeg,png,webp}',
+  { eager: true }
+);
 
-if (prop.carpeta_imagenes) {
-  const { data: storageFiles } = await supabase.storage
-    .from('propiedades-imagenes')
-    .list(prop.carpeta_imagenes, { limit: 100, sortBy: { column: 'name', order: 'asc' } });
-
-  if (storageFiles?.length) {
-    images = storageFiles
-      .filter(f => f.name !== '.emptyFolderPlaceholder')
-      .map(f => supabase.storage
-        .from('propiedades-imagenes')
-        .getPublicUrl(`${prop.carpeta_imagenes}/${f.name}`).data.publicUrl
-      );
-  }
+function imagesFor(entrySlug: string): string[] {
+  const prefix = `/src/assets/propiedades/${entrySlug}/`;
+  return Object.entries(imageModules)
+    .filter(([path]) => path.startsWith(prefix))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([, mod]) => mod.default.src);
 }
 
-if (images.length === 0) {
-  images = prop.imagenes?.length
-    ? prop.imagenes
-    : prop.portada
-      ? [prop.portada]
-      : [FALLBACK];
-}
-
+let images = imagesFor(slug!);
+if (images.length === 0) images = [FALLBACK];
 const hasMany = images.length > 1;
 
 // ── Labels ────────────────────────────────────────────────────
@@ -72,11 +62,11 @@ const VENTA_LBL: Record<string, string> = { disponible: 'Disponible', apartado: 
 const VENTA_CLS: Record<string, string> = { disponible: 'disponible', apartado: 'apartado', vendido: 'vendido' };
 
 const tipoLabel   = TIPO_LBL[prop.tipo]        ?? prop.tipo;
-const estadoLabel = VENTA_LBL[prop.estado_venta] ?? prop.estado_venta;
-const estadoClass = VENTA_CLS[prop.estado_venta] ?? 'disponible';
+const estadoLabel = VENTA_LBL[prop.estadoVenta] ?? prop.estadoVenta;
+const estadoClass = VENTA_CLS[prop.estadoVenta] ?? 'disponible';
 
 // ── Feature extraction ────────────────────────────────────────
-function extractNum(arr: string[] | null, kw: string): string | null {
+function extractNum(arr: string[] | null | undefined, kw: string): string | null {
   if (!arr) return null;
   const item = arr.find((s) => s.toLowerCase().includes(kw));
   if (!item) return null;
@@ -87,12 +77,12 @@ const c = prop.caracteristicas;
 const recamaras      = extractNum(c, 'recámara') ?? extractNum(c, 'recamara') ?? extractNum(c, 'cuarto');
 const banos          = extractNum(c, 'baño');
 const estacionamientos = extractNum(c, 'estacionamiento') ?? extractNum(c, 'cajón') ?? extractNum(c, 'garage');
-const area           = prop.metros_construccion ?? prop.metros_terreno;
+const area           = prop.metrosConstruccion ?? prop.metrosTerreno;
 
 // ── Price ─────────────────────────────────────────────────────
 const fmtPrice = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
 const preciofmt = fmtPrice.format(prop.precio);
-const precioM2  = prop.precio_por_m2 ? `${fmtPrice.format(prop.precio_por_m2)}/m²` : null;
+const precioM2  = prop.precioPorM2 ? `${fmtPrice.format(prop.precioPorM2)}/m²` : null;
 
 // ── WhatsApp ──────────────────────────────────────────────────
 const WA_MSG  = encodeURIComponent(`Hola, me interesa la propiedad: ${prop.titulo} en ${prop.zona}. ¿Podrían darme más información?`);
@@ -151,14 +141,13 @@ const distances = ZONE_DIST[prop.zona] ?? [];
 
 // ── SEO ───────────────────────────────────────────────────────
 const pageTitle = `${prop.titulo} en ${prop.zona} | DG Inmobiliaria`;
-const pageDesc  = prop.descripcion
-  ?? `${tipoLabel} en ${prop.zona}, Mazatlán. ${preciofmt} ${prop.moneda}.`;
+const pageDesc  = `${tipoLabel} en ${prop.zona}, Mazatlán. ${preciofmt} ${prop.moneda}.`;
 
 // ── Vars for client script ────────────────────────────────────
 const galleryImages = images;
 const propTitle     = prop.titulo;
 const propZona      = prop.zona;
-const propSlug      = prop.slug;
+const propSlug      = slug!;
 ---
 
 <BaseLayout title={pageTitle} description={pageDesc}>
@@ -191,8 +180,8 @@ const propSlug      = prop.slug;
               <div class="pg-mosaic__badges">
                 <span class="prop-card__badge prop-card__badge--tipo">{tipoLabel}</span>
                 <span class:list={['prop-card__badge prop-card__badge--estado', `prop-card__badge--${estadoClass}`]}>{estadoLabel}</span>
-                {prop.estado_publicacion === 'preventa' && <span class="prop-card__badge prop-card__badge--destacada">Preventa</span>}
-                {prop.destacada && prop.estado_publicacion !== 'preventa' && <span class="prop-card__badge prop-card__badge--destacada">Destacada</span>}
+                {prop.estadoPublicacion === 'preventa' && <span class="prop-card__badge prop-card__badge--destacada">Preventa</span>}
+                {prop.destacada && prop.estadoPublicacion !== 'preventa' && <span class="prop-card__badge prop-card__badge--destacada">Destacada</span>}
               </div>
               <div class="pg-mosaic__actions">
                 <button class="prop-gallery__action-btn" id="btn-fav" type="button" aria-label="Guardar en favoritos">
@@ -234,8 +223,8 @@ const propSlug      = prop.slug;
               <div class="pg-mosaic__badges">
                 <span class="prop-card__badge prop-card__badge--tipo">{tipoLabel}</span>
                 <span class:list={['prop-card__badge prop-card__badge--estado', `prop-card__badge--${estadoClass}`]}>{estadoLabel}</span>
-                {prop.estado_publicacion === 'preventa' && <span class="prop-card__badge prop-card__badge--destacada">Preventa</span>}
-                {prop.destacada && prop.estado_publicacion !== 'preventa' && <span class="prop-card__badge prop-card__badge--destacada">Destacada</span>}
+                {prop.estadoPublicacion === 'preventa' && <span class="prop-card__badge prop-card__badge--destacada">Preventa</span>}
+                {prop.destacada && prop.estadoPublicacion !== 'preventa' && <span class="prop-card__badge prop-card__badge--destacada">Destacada</span>}
               </div>
               <span class="pg-swiper__counter" id="pg-swiper-counter">1 / {images.length}</span>
               {images.length > 1 && (
@@ -278,7 +267,7 @@ const propSlug      = prop.slug;
               <p class="prop-price-sub">
                 {prop.moneda}
                 {precioM2 && <> · {precioM2}</>}
-                {prop.acepta_creditos?.length && <> · {prop.acepta_creditos.join(' · ')}</>}
+                {prop.aceptaCreditos?.length && <> · {prop.aceptaCreditos.join(' · ')}</>}
               </p>
 
               <!-- Feature row -->
@@ -307,22 +296,22 @@ const propSlug      = prop.slug;
                     {estacionamientos} <span>auto(s)</span>
                   </div>
                 )}
-                {prop.metros_terreno && prop.metros_construccion && (
+                {prop.metrosTerreno && prop.metrosConstruccion && (
                   <div class="prop-feat-item">
                     <MapPin size={18} stroke-width={1.5} />
-                    {prop.metros_terreno} m² <span>terreno</span>
+                    {prop.metrosTerreno} m² <span>terreno</span>
                   </div>
                 )}
               </div>
             </div>
 
             <!-- Descripción -->
-            {prop.descripcion && (
-              <section class="prop-section" id="descripcion" aria-label="Descripción">
-                <h2>Descripción</h2>
-                <p class="prop-section__text">{prop.descripcion}</p>
-              </section>
-            )}
+            <section class="prop-section" id="descripcion" aria-label="Descripción">
+              <h2>Descripción</h2>
+              <div class="prop-section__text">
+                <Content />
+              </div>
+            </section>
 
             <!-- Características -->
             {charsWithIcons.length > 0 && (
@@ -341,13 +330,13 @@ const propSlug      = prop.slug;
 
 
             <!-- Ubicación -->
-            {(mapSrc || prop.direccion_aprox) && (
+            {(mapSrc || prop.direccionAprox) && (
               <section class="prop-section" id="ubicacion" aria-label="Ubicación">
                 <h2>Ubicación</h2>
-                {prop.direccion_aprox && (
+                {prop.direccionAprox && (
                   <address class="prop-map-address">
                     <MapPin size={14} stroke-width={1.5} style="flex-shrink:0;margin-top:1px;color:var(--gold)" />
-                    {prop.direccion_aprox}
+                    {prop.direccionAprox}
                   </address>
                 )}
                 {mapSrc && (
@@ -376,31 +365,34 @@ const propSlug      = prop.slug;
             )}
 
             <!-- Related properties -->
-            {related.length > 0 && (
+            {relatedEntries.length > 0 && (
               <section class="prop-section" id="relacionadas" aria-label="Propiedades similares">
                 <h2>También podría interesarte</h2>
                 <div class="prop-related-grid">
-                  {related.map((r) => {
-                    const rImg   = r.portada ?? r.imagenes?.[0] ?? FALLBACK;
-                    const rTipo  = TIPO_LBL[r.tipo]  ?? r.tipo;
-                    const rVenta = VENTA_LBL[r.estado_venta] ?? r.estado_venta;
-                    const rCls   = VENTA_CLS[r.estado_venta] ?? 'disponible';
-                    const rArea  = r.metros_construccion ?? r.metros_terreno;
-                    const rRec   = extractNum(r.caracteristicas, 'recámara') ?? extractNum(r.caracteristicas, 'recamara');
-                    const rBan   = extractNum(r.caracteristicas, 'baño');
+                  {relatedEntries.map((r) => {
+                    const rSlug = r.slug;
+                    const rImgs = imagesFor(rSlug);
+                    const rImg  = rImgs[0] ?? FALLBACK;
+                    const rd    = r.data;
+                    const rTipo  = TIPO_LBL[rd.tipo]  ?? rd.tipo;
+                    const rVenta = VENTA_LBL[rd.estadoVenta] ?? rd.estadoVenta;
+                    const rCls   = VENTA_CLS[rd.estadoVenta] ?? 'disponible';
+                    const rArea  = rd.metrosConstruccion ?? rd.metrosTerreno;
+                    const rRec   = extractNum(rd.caracteristicas, 'recámara') ?? extractNum(rd.caracteristicas, 'recamara');
+                    const rBan   = extractNum(rd.caracteristicas, 'baño');
                     return (
                       <article class="prop-card">
                         <div class="prop-card__img">
-                          <img src={rImg} alt={r.titulo} loading="lazy" width="300" height="200" />
+                          <img src={rImg} alt={rd.titulo} loading="lazy" width="300" height="200" />
                           <span class="prop-card__badge prop-card__badge--tipo">{rTipo}</span>
                           <span class:list={['prop-card__badge prop-card__badge--estado', `prop-card__badge--${rCls}`]}>{rVenta}</span>
                         </div>
                         <div class="prop-card__body">
                           <p class="prop-card__zona">
-                            <MapPin size={12} stroke-width={1.5} />{r.zona}
+                            <MapPin size={12} stroke-width={1.5} />{rd.zona}
                           </p>
-                          <h3 class="prop-card__title">{r.titulo}</h3>
-                          <p class="prop-card__price">{fmtPrice.format(r.precio)} <span>{r.moneda}</span></p>
+                          <h3 class="prop-card__title">{rd.titulo}</h3>
+                          <p class="prop-card__price">{fmtPrice.format(rd.precio)} <span>{rd.moneda}</span></p>
                           {(rArea || rRec || rBan) && (
                             <div class="prop-card__features">
                               {rArea && <span class="prop-card__feat"><ArrowRight size={10} stroke-width={1.5} />{rArea} m²</span>}
@@ -408,7 +400,7 @@ const propSlug      = prop.slug;
                               {rBan  && <span class="prop-card__feat"><Bath size={12} stroke-width={1.5} />{rBan} baños</span>}
                             </div>
                           )}
-                          <a class="button button--gold prop-card__cta" href={`/propiedades/${r.slug}`}>
+                          <a class="button button--gold prop-card__cta" href={`/propiedades/${rSlug}`}>
                             Ver propiedad <ArrowRight size={14} stroke-width={1.5} />
                           </a>
                         </div>
