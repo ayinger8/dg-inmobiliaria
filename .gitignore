@@ -26,3 +26,5 @@ Thumbs.db
 # Claude Code metadata local
 .agents/
 skills-lock.json
+
+.vercel
