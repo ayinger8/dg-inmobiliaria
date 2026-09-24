@@ -3,12 +3,12 @@ titulo: Olympus Residential City — Casa modelo Hera 2R en Mykonos
 tipo: casa
 estadoVenta: disponible
 estadoPublicacion: preventa
-zona: Nuevo Mazatlán
+zona: El Venadillo
 precio: 4570000
 precioDesde: false
 moneda: MXN
 destacada: true
-direccionAprox: Olympus Residential City, Nuevo Mazatlán, Mazatlán, Sinaloa
+direccionAprox: Olympus Residential City, Av. José Luis "Peche" Ríce s/n, El Venadillo, Mazatlán, Sinaloa
 metrosTerreno: 144
 metrosConstruccion: 132
 caracteristicas:
@@ -33,9 +33,9 @@ numImagenes: 7
 ---
 
 **Casa modelo Hera 2R** en la sección **Mykonos** de Olympus Residential City,
-un desarrollo residencial en Nuevo Mazatlán que combina casas independientes,
-departamentos y lotes de terreno dentro de un mismo entorno con amenidades
-tipo resort.
+un desarrollo residencial en El Venadillo, Mazatlán, que combina casas
+independientes, departamentos y lotes de terreno dentro de un mismo entorno
+con amenidades tipo resort.
 
 ## Distribución del modelo Hera 2R
 
@@ -79,9 +79,9 @@ Consulta disponibilidad actual porque el desarrollo se está vendiendo rápido.
 
 ## Ubicación
 
-Nuevo Mazatlán / Marina Norte, zona en expansión con acceso rápido a las
-principales avenidas de la ciudad, cerca de nuevos desarrollos comerciales,
-plazas y restaurantes.
+Colonia El Venadillo, en la zona norte de Mazatlán. Acceso rápido a
+avenidas principales, cerca de nuevos desarrollos comerciales, plazas y
+restaurantes.
 
 _Los precios de preventa son por tiempo limitado. Agenda tu visita para
 conocer la casa modelo y las condiciones actuales de apartado._

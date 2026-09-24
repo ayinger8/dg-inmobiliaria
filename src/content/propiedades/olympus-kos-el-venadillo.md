@@ -3,13 +3,13 @@ titulo: Olympus Residential City — Terrenos en Isla de Kos
 tipo: terreno
 estadoVenta: disponible
 estadoPublicacion: preventa
-zona: Nuevo Mazatlán
+zona: El Venadillo
 precio: 1584000
 precioDesde: true
 precioPorM2: 11000
 moneda: MXN
 destacada: false
-direccionAprox: Olympus Residential City, Nuevo Mazatlán, Mazatlán, Sinaloa
+direccionAprox: Olympus Residential City, Av. José Luis "Peche" Ríce s/n, El Venadillo, Mazatlán, Sinaloa
 caracteristicas:
   - Lotes dentro de residencial con amenidades
   - Uso residencial habitacional
@@ -34,7 +34,7 @@ y seguridad.
 
 ## Precio
 
-**$11,000 MXN por m²** (varía por ubicación del lote dentro del residencial).
+**$11,000 MXN por m²** (varía por ubicación del lote).
 
 El precio final depende de la superficie del lote y de la ubicación exacta
 dentro del plano maestro. Como referencia:
@@ -68,9 +68,9 @@ de Mykonos y los departamentos de Mylos:
 
 ## Ubicación
 
-Nuevo Mazatlán / Marina Norte, zona en expansión con acceso rápido a las
-principales avenidas de la ciudad, cerca de nuevos desarrollos comerciales,
-plazas y restaurantes.
+Colonia El Venadillo, en la zona norte de Mazatlán. Acceso rápido a
+avenidas principales, cerca de nuevos desarrollos comerciales, plazas y
+restaurantes.
 
 _La mayoría de los lotes ya están vendidos. Agenda tu visita para conocer
 los lotes disponibles hoy, sus dimensiones exactas y el precio final._
